@@ -253,8 +253,6 @@ public:
         this->getFacialGeometry();
     }
     void setName(const char(*n), const char(*s), const char(*p)) {
-       /* const char* tmp1 =  ;
-        const char* tmp2 = ;*/
         char tmp[20];
         char tmp1;
         strcpy_s(tmp, n);
@@ -287,9 +285,19 @@ public:
     }
     void setFingerprint(int x) {
         fingerprint::setFingerprint(x);
-        file.open(format("{}.txt", this->name), ios::app);
-        file << "Отпечаток пальца: " << endl << fingerprint::fingerprintID << ")" << x;
+        file.open(format("{}.txt", name), ios::out);
+        file << "Отпечатки пальцев: " << endl;
+        for (int i = 0; i < fingerprint:: fingerprintID; i++) {
+            file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
+        }
+        file << "Радужка глаза: " << endl;
+        for (int i = 0; i < iris:: irisID; i++) {
+            file << format("{}){}", i + 1, iris::getIris(i)) << endl;
+        }
+        file << "Геометрия лица: " << endl;
+        for (int i = 0; i < facialGeometry:: facialGeometryID; i++) {
+            file << format("{}){}", i + 1, facialGeometry::getFacialGeometry(i)) << endl;
+        }
         file.close();
-       // this->file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
     }
 };
