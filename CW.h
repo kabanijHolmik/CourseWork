@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -205,16 +206,21 @@ public:
         name = n;
         strcpy_s(surname, s);
         strcpy_s(patronymic, p);
-        file.open(format("{}.txt", *n));
+        file.open(format("{}.txt", name));
         file.close();
         cout << "Человек успешно добавлен" << endl << endl;
     }
     human(const char(*n), const char(*s), const char(*p), int age, int n1, int n2, int n3) : fingerprint(n1), iris(n2), facialGeometry(n3) {
+        ifstream check;
+        check.open(format("{}.txt", *n));
+        if (check) {
+            remove(format("{}.txt", *n).c_str());
+        }
         this->age = age;
         name = n;
         strcpy_s(surname, s);
         strcpy_s(patronymic, p);
-        file.open(format("{}.txt", *n), ios:: out);
+        file.open(format("{}.txt", name), ios:: out);
         file << "Отпечатки пальцев: " << endl;
         for (int i = 0; i < n1; i++) {
             file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
@@ -258,7 +264,7 @@ public:
         cout << "Имя: " << this->name << endl;
         cout << "Фамилия: " << this->surname << endl;
         cout << "Отчество: " << this->patronymic << endl;
-        cout << "Возраст: " << this->age << endl;
+        cout << "Возраст: " << this->age << endl << endl;
     }
     void getAllInf() {
         cout << "Имя: " << this->name << endl;
@@ -271,7 +277,6 @@ public:
     }
     void setName(const char(*n), const char(*s), const char(*p)) {
         char tmp[20];
-        char tmp1;
         strcpy_s(tmp, n);
         if (rename(format("{}.txt", this->name).c_str(), format("{}.txt", tmp).c_str()) == 0);
         else return;
@@ -339,15 +344,12 @@ public:
     void getPass(human* b) {
         if (compare(b)) {
             time_t seconds = time(NULL);
-            time_t secondsT = seconds + 24 * 3600;
             tm* time = localtime(&seconds);
-            tm* timeT = localtime(&secondsT);
             string dmt = asctime(time);
-            string dmtT = asctime(timeT);
             fstream pass;
-            pass.open(format("{}_PASS.txt"), ios::out);
+            pass.open(format("{}_PASS.txt", this->name), ios::out);
             pass << format("Пропуск для {} {} {}", this->name, this->surname, this->patronymic) << endl;
-            pass << dmt << " - " << dmtT;
+            pass << "Действует 24 часа с момента выдачи: " << dmt;
         }
     }
 };
