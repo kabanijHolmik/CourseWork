@@ -3,6 +3,7 @@
 #include <vector>
 #include <format>
 #include <cstdio>
+#include <ctime>
 using namespace std;
 
 class fingerprint {
@@ -49,11 +50,11 @@ public:
         }
         return res;
     }
-    void popFingerprint() {//Удаляет последний элемент
+    virtual void popFingerprint() {//Удаляет последний элемент
         fingerprintID--;
         a.pop_back();
     }
-    void popFingerprint(int ID) { //Удаляет элемент по ID
+    virtual void popFingerprint(int ID) { //Удаляет элемент по ID
         fingerprintID--;
         a.erase(a.begin() + ID);
     }
@@ -86,7 +87,7 @@ protected:
     int eye;
     int irisID = 0;
 public:
-    void setIris(int x) {
+    virtual void setIris(int x) {
         this->eye = x;
         a.push_back(this->eye);
         this->irisID++;
@@ -113,11 +114,11 @@ public:
         }
         return res;
     }
-    void popIris() {
+    virtual void popIris() {
         irisID--;
         a.pop_back();
     }
-    void popIris(int ID) {
+    virtual void popIris(int ID) {
         irisID--;
         a.erase(a.begin() + ID);
     }
@@ -149,7 +150,7 @@ protected:
     int face;
     int facialGeometryID = 0;
 public:
-    void setFacialGeometry(int x) {
+    virtual void setFacialGeometry(int x) {
         this->face = x;
         a.push_back(this->face);
         this->facialGeometryID++;
@@ -176,11 +177,11 @@ public:
         }
         return res;
     }
-    void popFacialGeometry() {
+    virtual void popFacialGeometry() {
         facialGeometryID--;
         a.pop_back();
     }
-    void popFacialGeometry(int ID) {
+    virtual void popFacialGeometry(int ID) {
         facialGeometryID--;
         a.erase(a.begin() + ID);
     }
@@ -237,6 +238,22 @@ private:
     char patronymic[20];
     fstream file;
 public:
+    void rewriteFile() {
+        file.open(format("{}.txt", name), ios::out);
+        file << "Отпечатки пальцев: " << endl;
+        for (int i = 0; i < fingerprint::fingerprintID; i++) {
+            file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
+        }
+        file << "Радужка глаза: " << endl;
+        for (int i = 0; i < iris::irisID; i++) {
+            file << format("{}){}", i + 1, iris::getIris(i)) << endl;
+        }
+        file << "Геометрия лица: " << endl;
+        for (int i = 0; i < facialGeometry::facialGeometryID; i++) {
+            file << format("{}){}", i + 1, facialGeometry::getFacialGeometry(i)) << endl;
+        }
+        file.close();
+    }
     void getInf() {
         cout << "Имя: " << this->name << endl;
         cout << "Фамилия: " << this->surname << endl;
@@ -285,19 +302,52 @@ public:
     }
     void setFingerprint(int x) {
         fingerprint::setFingerprint(x);
-        file.open(format("{}.txt", name), ios::out);
-        file << "Отпечатки пальцев: " << endl;
-        for (int i = 0; i < fingerprint:: fingerprintID; i++) {
-            file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
+        rewriteFile();
+    }
+    void popFingerprint() {
+        fingerprint::popFingerprint();
+        rewriteFile();
+    }
+    void popFingerprint(int ID) {
+        fingerprint::popFingerprint(ID);
+        rewriteFile();
+    }
+    void setIris(int x) {
+        iris::setIris(x);
+        rewriteFile();
+    }
+    void popIris() {
+        iris::popIris();
+        rewriteFile();
+    }
+    void popIris(int ID) {
+        iris::popIris(ID);
+        rewriteFile();
+    }
+    void setFacialGeometry(int x) {
+        facialGeometry::setFacialGeometry(x);
+        rewriteFile();
+    }
+    void popFacialGeometry() {
+        facialGeometry::popFacialGeometry();
+        rewriteFile();
+    }
+    void popFacialGeometry(int ID) {
+        facialGeometry::popFacialGeometry(ID);
+        rewriteFile();
+    }
+    void getPass(human* b) {
+        if (compare(b)) {
+            time_t seconds = time(NULL);
+            time_t secondsT = seconds + 24 * 3600;
+            tm* time = localtime(&seconds);
+            tm* timeT = localtime(&secondsT);
+            string dmt = asctime(time);
+            string dmtT = asctime(timeT);
+            fstream pass;
+            pass.open(format("{}_PASS.txt"), ios::out);
+            pass << format("Пропуск для {} {} {}", this->name, this->surname, this->patronymic) << endl;
+            pass << dmt << " - " << dmtT;
         }
-        file << "Радужка глаза: " << endl;
-        for (int i = 0; i < iris:: irisID; i++) {
-            file << format("{}){}", i + 1, iris::getIris(i)) << endl;
-        }
-        file << "Геометрия лица: " << endl;
-        for (int i = 0; i < facialGeometry:: facialGeometryID; i++) {
-            file << format("{}){}", i + 1, facialGeometry::getFacialGeometry(i)) << endl;
-        }
-        file.close();
     }
 };

@@ -19,7 +19,7 @@ int main()
     human* b = new human("a", "b", "c", 12, 1, 1, 1);
     b->setName("З", "Б", "Олегович");
     b->getInf();
-    //b->setFingerprint(123456);
+    b->setFingerprint(123456);
    /* b->getAllInf();
     human* a = new human("A", "B", "D", 15, 1, 1, 1);
     a->getAllInf();
