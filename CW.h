@@ -7,6 +7,7 @@
 #include <ctime>
 using namespace std;
 
+fstream libF, libI, libFa;//файл содержащий все биометрические данные, после будет использоваться для метода compare
 class fingerprint {
 public:
     fingerprint() {}
@@ -15,6 +16,7 @@ public:
         for (int i = 0; i < amount; i++) {
             cout << "Введите отпечаток пальца " << i + 1 << " ";
             cin >> k;
+            fingerprintNormalisation(k);
             setFingerprint(k);
         }
         cout << endl;
@@ -25,6 +27,7 @@ protected:
     int fingerprintID = 0;
 public:
     virtual void setFingerprint(int x) { //устанавливает отпечаток пальца
+        fingerprintNormalisation(x);
         this->finger = x;
         a.push_back(this->finger);
         this->fingerprintID++;
@@ -68,6 +71,16 @@ public:
     int lengthFingerPrint() {
         return a.size();
     }
+    void fingerprintNormalisation(int& x) {
+        if (x < 1000) {
+            x *= 10;
+            fingerprintNormalisation(x);
+        }
+        if (x > 9999) {
+            x /= 10;
+            fingerprintNormalisation(x);
+        }
+    }
 
 };
 
@@ -79,6 +92,7 @@ public:
         for (int i = 0; i < amount; i++) {
             cout << "Просканируйте радужку глаза " << i + 1 << " ";
             cin >> k;
+            irisNormalisation(k);
             setIris(k);
         }
         cout << endl;
@@ -89,6 +103,7 @@ protected:
     int irisID = 0;
 public:
     virtual void setIris(int x) {
+        irisNormalisation(x);
         this->eye = x;
         a.push_back(this->eye);
         this->irisID++;
@@ -132,6 +147,16 @@ public:
     int lengthIris() {
         return a.size();
     }
+    void irisNormalisation(int& x) {
+        if (x < 10000) {
+            x *= 10;
+            irisNormalisation(x);
+        }
+        if (x > 99999) {
+            x /= 10;
+            irisNormalisation(x);
+        }
+    }
 };
 
 class facialGeometry {
@@ -142,6 +167,7 @@ public:
         for (int i = 0; i < amount; i++) {
             cout << "Просканируйте геомертию лица " << i + 1 << " ";
             cin >> k;
+            facialNormalisation(k);
             setFacialGeometry(k);
         }
         cout << endl;
@@ -152,6 +178,7 @@ protected:
     int facialGeometryID = 0;
 public:
     virtual void setFacialGeometry(int x) {
+        facialNormalisation(x);
         this->face = x;
         a.push_back(this->face);
         this->facialGeometryID++;
@@ -195,6 +222,16 @@ public:
     int lengthFacialGeometry() {
         return a.size();
     }
+    void facialNormalisation(int& x) {
+        if (x < 100000) {
+            x *= 10;
+            facialNormalisation(x);
+        }
+        if (x > 999999) {
+            x /= 10;
+            facialNormalisation(x);
+        }
+    }
 };
 
 class human : public fingerprint, public iris, public facialGeometry {
@@ -202,38 +239,56 @@ public:
     human() : fingerprint(), iris(), facialGeometry() {}
     human(int n1, int n2, int n3) : fingerprint(n1), iris(n2), facialGeometry(n3) {}
     human(const char(*n), const char(*s), const char(*p), int age) : fingerprint(), iris(), facialGeometry() {
-        this->age = age;
         name = n;
+        ifstream check;
+        check.open(format("Res/{}.txt", name));
+        if (check) {
+            remove(format("Res/{}.txt", name).c_str());
+        }
+        this->age = age;
         strcpy_s(surname, s);
         strcpy_s(patronymic, p);
-        file.open(format("{}.txt", name));
+        file.open(format("Res/{}.txt", name));
         file.close();
         cout << "Человек успешно добавлен" << endl << endl;
     }
     human(const char(*n), const char(*s), const char(*p), int age, int n1, int n2, int n3) : fingerprint(n1), iris(n2), facialGeometry(n3) {
+        name = n;
         ifstream check;
-        check.open(format("{}.txt", *n));
+        check.open(format("Res/{}.txt", name));
         if (check) {
-            remove(format("{}.txt", *n).c_str());
+            remove(format("Res/{}.txt", name).c_str());
         }
         this->age = age;
         name = n;
         strcpy_s(surname, s);
         strcpy_s(patronymic, p);
-        file.open(format("{}.txt", name), ios:: out);
+        file.open(format("Res/{}.txt", name), ios:: out);
+        libF.open("Lib/fingerprint.txt", ios::app);
+        if (!libF) cout << "Сууука";
         file << "Отпечатки пальцев: " << endl;
         for (int i = 0; i < n1; i++) {
             file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
+            libF << fingerprint::getFingerprint(i) << " ";
         } 
+        libI.open("Lib/iris.txt", ios::app);
+        if (!libI) cout << "бля";
         file << "Радужка глаза: " << endl;
         for (int i = 0; i < n2; i++) {
             file << format("{}){}", i + 1, iris::getIris(i)) << endl;
+            libI << iris::getIris(i) << " ";
         }
+        libFa.open("Lib/facial.txt", ios::app);
+        if (!libFa) cout << "пиздос";
         file << "Геометрия лица: " << endl;
         for (int i = 0; i < n3; i++) {
             file << format("{}){}", i + 1, facialGeometry::getFacialGeometry(i)) << endl;
+            libFa << facialGeometry::getFacialGeometry(i) << " ";
         }
         file.close();
+        libF.close();
+        libI.close();
+        libFa.close();
         cout << "Человек успешно добавлен" << endl << endl;
     }
 private:
@@ -245,7 +300,7 @@ private:
     fstream file;
 public:
     void rewriteFile() {
-        file.open(format("{}.txt", name), ios::out);
+        file.open(format("Res/{}.txt", name), ios::out);
         file << "Отпечатки пальцев: " << endl;
         for (int i = 0; i < fingerprint::fingerprintID; i++) {
             file << format("{}){}", i + 1, fingerprint::getFingerprint(i)) << endl;
@@ -278,7 +333,7 @@ public:
     void setName(const char(*n), const char(*s), const char(*p)) {
         char tmp[20];
         strcpy_s(tmp, n);
-        if (rename(format("{}.txt", this->name).c_str(), format("{}.txt", tmp).c_str()) == 0);
+        if (rename(format("Res/{}.txt", name).c_str(), format("Res/{}.txt", name).c_str()) == 0);
         else return;
         name = n;
         strcpy_s(surname, s);
@@ -308,6 +363,9 @@ public:
     void setFingerprint(int x) {
         fingerprint::setFingerprint(x);
         rewriteFile();
+        libF.open("Lib/fingerprint.txt", ios::app);
+        libF << format("{} ", x);
+        libF.close();
     }
     void popFingerprint() {
         fingerprint::popFingerprint();
@@ -320,6 +378,9 @@ public:
     void setIris(int x) {
         iris::setIris(x);
         rewriteFile();
+        libI.open("Lib/iris.txt", ios::app);
+        libI << format("{} ", x);
+        libI.close();
     }
     void popIris() {
         iris::popIris();
@@ -332,6 +393,9 @@ public:
     void setFacialGeometry(int x) {
         facialGeometry::setFacialGeometry(x);
         rewriteFile();
+        libFa.open("Lib/facial.txt", ios::app);
+        libFa << format("{} ", x);
+        libFa.close();
     }
     void popFacialGeometry() {
         facialGeometry::popFacialGeometry();
@@ -343,13 +407,15 @@ public:
     }
     void getPass(human* b) {
         if (compare(b)) {
-            time_t seconds = time(NULL);
-            tm* time = localtime(&seconds);
-            string dmt = asctime(time);
+            time_t seconds, seconds24;
+            time(&seconds);
+            seconds24 = seconds + 60*60*24;
+            string dmt = ctime(&seconds);
+            string dmt24 = ctime(&seconds24);
             fstream pass;
-            pass.open(format("{}_PASS.txt", this->name), ios::out);
-            pass << format("Пропуск для {} {} {}", this->name, this->surname, this->patronymic) << endl;
-            pass << "Действует 24 часа с момента выдачи: " << dmt;
+            pass.open(format("Res/{}_PASS.txt", name), ios::out);
+            pass << format("Пропуск для {} {} {}:",this->surname, this->name, this->patronymic) << endl;
+            pass << "\nДействует 24 часа с момента выдачи: \n" << dmt << "\nДействителен по:\n" << dmt24;
         }
     }
 };
